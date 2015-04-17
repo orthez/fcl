@@ -63,6 +63,7 @@ public:
     data[1] = b;
     data[2] = c;
     data[3] = d;
+    normalize();
   }
 
   /// @brief checks that quaternion is normalized
