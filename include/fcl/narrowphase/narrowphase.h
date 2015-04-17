@@ -124,9 +124,6 @@ struct GJKSolver_libccd
                                      max_distance_iterations, distance_tolerance,
                                      dist, p1, p2);
 
-    if(p1) *p1 = inverse(tf1).transform(*p1);
-    if(p2) *p2 = inverse(tf2).transform(*p2);
-
     details::GJKInitializer<S1>::deleteGJKObject(o1);
     details::GJKInitializer<S2>::deleteGJKObject(o2);
 
@@ -559,8 +556,8 @@ struct GJKSolver_indep
 
       if(distance) *distance = (w0 - w1).length();
       
-      if(p1) *p1 = w0;
-      if(p2) *p2 = shape.toshape0.transform(w1);
+      if(p1) *p1 = tf1.transform (w0);
+      if(p2) *p2 = tf1.transform (w1);
       
       return true;
     }

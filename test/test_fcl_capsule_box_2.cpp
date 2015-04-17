@@ -36,8 +36,10 @@
 
 
 #define BOOST_TEST_MODULE "FCL_GEOMETRIC_SHAPES"
+#define CHECK_CLOSE_TO_0(x, eps) BOOST_CHECK_CLOSE ((x + 1.0), (1.0), (eps))
 #include <boost/test/unit_test.hpp>
 
+#include <cmath>
 #include <fcl/distance.h>
 #include <fcl/math/transform.h>
 #include <fcl/collision.h>
@@ -53,22 +55,27 @@ BOOST_AUTO_TEST_CASE(distance_capsule_box)
   CollisionGeometryPtr_t boxGeometry (new fcl::Box (1., 2., 4.));
 
   // Enable computation of nearest points
-  fcl::DistanceRequest distanceRequest (true);
+  fcl::DistanceRequest distanceRequest (true, 0, 0, fcl::GST_INDEP);
   fcl::DistanceResult distanceResult;
-  
-  fcl::Transform3f tf1 (fcl::Vec3f (3., 0, 0));
+
+  // Rotate capsule around y axis by pi/2 and move it behind box
+  fcl::Transform3f tf1 (fcl::Quaternion3f (sqrt(2)/2, 0, sqrt(2)/2, 0),
+			fcl::Vec3f (-10., 0.8, 1.5));
   fcl::Transform3f tf2;
   fcl::CollisionObject capsule (capsuleGeometry, tf1);
   fcl::CollisionObject box (boxGeometry, tf2);
 
+  // test distance
+  distanceResult.clear ();
   fcl::distance (&capsule, &box, distanceRequest, distanceResult);
-  // Nearest point on capsule
-  const fcl::Vec3f& o1 (distanceResult.nearest_points [0]);
-  // Nearest point on box
-  const fcl::Vec3f& o2 (distanceResult.nearest_points [1]);
-  BOOST_CHECK_CLOSE (distanceResult.min_distance, 0.5, 1e-4);
-  BOOST_CHECK_CLOSE (o1 [0], -2, 1e-4);
-  BOOST_CHECK_CLOSE (o1 [1], 0, 1e-4);
-  BOOST_CHECK_CLOSE (o2 [0], .5, 1e-4);
-  BOOST_CHECK_CLOSE (o1 [1], 0, 1e-4);
+  fcl::Vec3f o1 = distanceResult.nearest_points [0];
+  fcl::Vec3f o2 = distanceResult.nearest_points [1];
+
+  BOOST_CHECK_CLOSE (distanceResult.min_distance, 5.5, 1e-2);
+  BOOST_CHECK_CLOSE (o1 [0], -6, 1e-2);
+  BOOST_CHECK_CLOSE (o1 [1], 0.8, 1e-1);
+  BOOST_CHECK_CLOSE (o1 [2], 1.5, 1e-2);
+  BOOST_CHECK_CLOSE (o2 [0], -0.5, 1e-2);
+  BOOST_CHECK_CLOSE (o2 [1], 0.8, 1e-1);
+  BOOST_CHECK_CLOSE (o2 [2], 1.5, 1e-2);
 }
